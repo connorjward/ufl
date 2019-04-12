@@ -123,6 +123,10 @@ register_element("Nedelec 2nd kind H(curl)", "N2curl", 1, HCurl,
                  "covariant Piola", (1, None), simplices[1:])  # "BDME" (2d), "N2E" (3d)
 register_element("Raviart-Thomas", "RT", 1, HDiv, "contravariant Piola",
                  (1, None), simplices[1:])   # "RTF"  (2d), "N1F" (3d)
+register_element("Serendipity 2", "S2", 3, H1, "identity", (1, None),
+                 ("quadrilateral",))
+
+
 
 # Elements not in the periodic table
 register_element("Argyris", "ARG", 0, H2, "identity", (5, 5), ("triangle",))
