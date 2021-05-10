@@ -15,7 +15,7 @@ algorithms."""
 import inspect
 
 from ufl.algorithms.map_integrands import map_integrands
-from ufl.classes import Variable, all_ufl_classes
+from ufl.classes import Coefficient, Variable, all_ufl_classes
 from ufl.log import error
 
 
@@ -216,6 +216,29 @@ class VariableStripper(ReuseTransformer):
         return self.visit(o.ufl_operands[0])
 
 
+class CoefficientDataStripper(ReuseTransformer):
+    def __init__(self):
+        ReuseTransformer.__init__(self)
+        self.coeff_map = {}
+
+    def terminal(self, o):
+        if isinstance(o, Coefficient):
+            new_o = o._ufl_strip_data_()
+            self.coeff_map[new_o] = o
+        return o
+
+
+class CoefficientDataAttacher(ReuseTransformer):
+    def __init__(self, coeff_map):
+        ReuseTransformer.__init__(self)
+
+        # Need to invert the map
+        self.coeff_map = {b: a for a, b in coeff_map}
+
+    def terminal(self, o):
+        return self.coeff_map.get(o, o)
+
+
 def apply_transformer(e, transformer, integral_type=None):
     """Apply transformer.visit(expression) to each integrand
     expression in form, or to form if it is an Expr."""
@@ -240,3 +263,18 @@ def ufl2uflcopy(e):
 def strip_variables(e):
     "Replace all Variable instances with the expression they represent."
     return apply_transformer(e, VariableStripper())
+
+
+def strip_data(e):
+    """Convert an UFL expression to a new UFL expression and return a the new
+    object and a mapping of new -> old.
+    Subclasses will be converted to pure UFL objects.
+    """
+    transformer = CoefficientDataStripper()
+    return apply_transformer(e, transformer), transformer.coeff_map
+
+
+def attach_data(e, coeff_map):
+    """Reattach the data from a stripped form."""
+    return apply_transformer(e, CoefficientDataAttacher(coeff_map))
+

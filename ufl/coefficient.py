@@ -87,6 +87,17 @@ class Coefficient(FormArgument):
         fsdata = self._ufl_function_space._ufl_signature_data_(renumbering)
         return ("Coefficient", count, fsdata)
 
+    def _ufl_strip_data_(self):
+        el = self.ufl_element()
+        # XXX: This is a hack to ensure that if the original
+        # coefficient had a domain, the new one does too.
+        # This should be overhauled with requirement that Expressions
+        # always have a domain.
+        if self.ufl_domain() is not None:
+            el = FunctionSpace(self.ufl_domain(), el)
+        new_coeff = Coefficient(el)
+        return new_coeff
+
     def __str__(self):
         count = str(self._count)
         if len(count) == 1:
