@@ -88,6 +88,9 @@ class Coefficient(FormArgument):
         return ("Coefficient", count, fsdata)
 
     def _ufl_strip_data_(self):
+        # TODO: This has been copied from ufl/algorithms/compute_form_data.py
+        # and I can't refactor cleanly because of the presence of the element
+        # mapping (2016).
         el = self.ufl_element()
         # XXX: This is a hack to ensure that if the original
         # coefficient had a domain, the new one does too.
@@ -95,8 +98,7 @@ class Coefficient(FormArgument):
         # always have a domain.
         if self.ufl_domain() is not None:
             el = FunctionSpace(self.ufl_domain(), el)
-        new_coeff = Coefficient(el)
-        return new_coeff
+        return Coefficient(el)
 
     def __str__(self):
         count = str(self._count)

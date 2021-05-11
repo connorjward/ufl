@@ -26,6 +26,8 @@ class Terminal(Expr):
     def __init__(self):
         Expr.__init__(self)
 
+    # TODO: Could this be used instead of _ufl_strip_data_? This function
+    # doesn't actually reconstruct anything at present.
     def _ufl_expr_reconstruct_(self, *operands):
         "Return self."
         if operands:

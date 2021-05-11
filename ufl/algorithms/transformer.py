@@ -216,7 +216,7 @@ class VariableStripper(ReuseTransformer):
         return self.visit(o.ufl_operands[0])
 
 
-class CoefficientDataStripper(ReuseTransformer):
+class CoefficientStripper(ReuseTransformer):
     def __init__(self):
         ReuseTransformer.__init__(self)
         self.coeff_map = {}
@@ -228,15 +228,18 @@ class CoefficientDataStripper(ReuseTransformer):
         return o
 
 
-class CoefficientDataAttacher(ReuseTransformer):
+class CoefficientAttacher(ReuseTransformer):
     def __init__(self, coeff_map):
         ReuseTransformer.__init__(self)
-
-        # Need to invert the map
-        self.coeff_map = {b: a for a, b in coeff_map}
+        self.coeff_map = coeff_map
 
     def terminal(self, o):
-        return self.coeff_map.get(o, o)
+        if isinstance(o, Coefficient):
+            try:
+                return self.coeff_map[o]
+            except KeyError:
+                raise ValueError(f"Coefficient {o} is not present in the mapping")
+        return o
 
 
 def apply_transformer(e, transformer, integral_type=None):
@@ -265,16 +268,27 @@ def strip_variables(e):
     return apply_transformer(e, VariableStripper())
 
 
-def strip_data(e):
-    """Convert an UFL expression to a new UFL expression and return a the new
-    object and a mapping of new -> old.
-    Subclasses will be converted to pure UFL objects.
+# TODO: Do we only need to worry about coefficients holding data references?
+def strip_coefficients(e):
+    """Convert an UFL expression to a new UFL expression where the coefficients
+    have been replaced with copies. The new expression is returned as well as a
+    mapping from the new coefficients to the old ones.
+
+    This function is useful for forms containing subclassed coefficients that
+    hold references to large data structures since these will be extracted into
+    the mapping allowing the form to be cached without leaking memory.
     """
-    transformer = CoefficientDataStripper()
+    transformer = CoefficientStripper()
     return apply_transformer(e, transformer), transformer.coeff_map
 
 
-def attach_data(e, coeff_map):
-    """Reattach the data from a stripped form."""
-    return apply_transformer(e, CoefficientDataAttacher(coeff_map))
+def attach_coefficients(e, coeff_map):
+    """Convert an UFL expression to a new one where the coefficients have been
+    replaced by those in the provided mapping. The keys of the map correspond to
+    the coefficients to be replaced and the values are the coefficients they are
+    to be replaced with.
+
+    Note that this function is simply the opposite of strip_coefficients.
+    """
+    return apply_transformer(e, CoefficientAttacher(coeff_map))
 
