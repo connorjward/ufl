@@ -216,29 +216,29 @@ class VariableStripper(ReuseTransformer):
         return self.visit(o.ufl_operands[0])
 
 
-class CoefficientStripper(ReuseTransformer):
+class FormArgumentStripper(ReuseTransformer):
     def __init__(self):
         ReuseTransformer.__init__(self)
-        self.coeff_map = {}
+        self.arg_map = {}
 
     def terminal(self, o):
-        if isinstance(o, Coefficient):
-            new_o = o._ufl_strip_data_()
-            self.coeff_map[new_o] = o
+        if isinstance(o, FormArgument):
+            new_o = o.ufl_strip_data()
+            self.arg_map[new_o] = o
         return o
 
 
-class CoefficientAttacher(ReuseTransformer):
-    def __init__(self, coeff_map):
+class FormArgumentReplacer(ReuseTransformer):
+    def __init__(self, arg_map):
         ReuseTransformer.__init__(self)
-        self.coeff_map = coeff_map
+        self.arg_map = arg_map
 
     def terminal(self, o):
-        if isinstance(o, Coefficient):
+        if isinstance(o, FormArgument):
             try:
-                return self.coeff_map[o]
+                return self.arg_map[o]
             except KeyError:
-                raise ValueError(f"Coefficient {o} is not present in the mapping")
+                raise ValueError(f"FormArgument {o} is not present in the mapping")
         return o
 
 
@@ -268,27 +268,26 @@ def strip_variables(e):
     return apply_transformer(e, VariableStripper())
 
 
-# TODO: Do we only need to worry about coefficients holding data references?
-def strip_coefficients(e):
-    """Convert an UFL expression to a new UFL expression where the coefficients
-    have been replaced with copies. The new expression is returned as well as a
-    mapping from the new coefficients to the old ones.
+def strip_form_arguments(e):
+    """Convert an UFL expression to a new UFL expression where the form
+    arguments have been replaced with copies. The new expression is returned as
+    well as a mapping from the new arguments to the old ones.
 
-    This function is useful for forms containing subclassed coefficients that
-    hold references to large data structures since these will be extracted into
-    the mapping allowing the form to be cached without leaking memory.
+    This function is useful for forms containing augmented UFL objects that
+    hold references to large data structures. These objects are be extracted
+    into the mapping allowing the form to be cached without leaking memory.
     """
-    transformer = CoefficientStripper()
-    return apply_transformer(e, transformer), transformer.coeff_map
+    transformer = FormArgumentStripper()
+    return apply_transformer(e, transformer), transformer.arg_map
 
 
-def attach_coefficients(e, coeff_map):
-    """Convert an UFL expression to a new one where the coefficients have been
+def attach_form_arguments(e, arg_map):
+    """Convert an UFL expression to a new one where the form arguments have been
     replaced by those in the provided mapping. The keys of the map correspond to
-    the coefficients to be replaced and the values are the coefficients they are
+    the objects to be replaced and the values are the objects they are
     to be replaced with.
 
-    Note that this function is simply the opposite of strip_coefficients.
+    Note that this function is simply the opposite of strip_form_arguments.
     """
-    return apply_transformer(e, CoefficientAttacher(coeff_map))
+    return apply_transformer(e, FormArgumentReplacer(arg_map))
 

@@ -27,6 +27,10 @@ class AbstractFunctionSpace(object):
     def ufl_sub_spaces(self):
         raise NotImplementedError("Missing implementation of IFunctionSpace.ufl_sub_spaces in %s." % self.__class__.__name__)
 
+    def ufl_strip_data(self):
+        """TODO"""
+        raise NotImplementedError("Missing implementation of IFunctionSpace.ufl_strip_data in %s." % self.__class__.__name__)
+
 
 @attach_operators_from_hash_data
 class FunctionSpace(AbstractFunctionSpace):
@@ -68,6 +72,9 @@ class FunctionSpace(AbstractFunctionSpace):
         else:
             return (domain,)
 
+    def ufl_strip_data(self):
+        return type(self)(self._ufl_domain.ufl_strip_data(), self._ufl_element)
+
     def _ufl_hash_data_(self):
         domain = self.ufl_domain()
         element = self.ufl_element()
@@ -108,6 +115,9 @@ class TensorProductFunctionSpace(AbstractFunctionSpace):
     def ufl_sub_spaces(self):
         return self._ufl_function_spaces
 
+    def ufl_strip_data(self):
+        return type(self)(fs.ufl_strip_data() for fs in self._ufl_function_spaces)
+
     def _ufl_hash_data_(self):
         return ("TensorProductFunctionSpace",) + tuple(V._ufl_hash_data_() for V in self.ufl_sub_spaces())
 
@@ -134,6 +144,9 @@ class MixedFunctionSpace(AbstractFunctionSpace):
     def ufl_sub_spaces(self):
         "Return ufl sub spaces."
         return self._ufl_function_spaces
+
+    def ufl_strip_data(self):
+        return type(self)(fs.ufl_strip_data() for fs in self._ufl_function_spaces)
 
     def ufl_sub_space(self, i):
         "Return i-th ufl sub space."

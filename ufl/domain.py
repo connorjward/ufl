@@ -53,6 +53,10 @@ class AbstractDomain(object):
         "Return the dimension of the topology of this domain."
         return self._topological_dimension
 
+    def ufl_strip_data(self):
+        """TODO."""
+        raise NotImplementedError
+
 
 # TODO: Would it be useful to have a domain representing R^d? E.g. for
 # Expression.
@@ -104,6 +108,11 @@ class Mesh(AbstractDomain):
     def ufl_cell(self):
         return self._ufl_coordinate_element.cell()
 
+    def ufl_strip_data(self):
+        return type(self).__init__(self._ufl_coordinate_element,
+                                   self._ufl_id,
+                                   self._ufl_cargo)
+
     def is_piecewise_linear_simplex_domain(self):
         return (self._ufl_coordinate_element.degree() == 1) and self.ufl_cell().is_simplex()
 
@@ -134,6 +143,7 @@ class MeshView(AbstractDomain):
     """Symbolic representation of a mesh."""
 
     def __init__(self, mesh, topological_dimension, ufl_id=None):
+        # TODO: topological_dimension is not actually used. Is this a bug?
         self._ufl_id = self._init_ufl_id(ufl_id)
 
         # Store mesh
@@ -153,6 +163,11 @@ class MeshView(AbstractDomain):
 
     def is_piecewise_linear_simplex_domain(self):
         return self._ufl_mesh.is_piecewise_linear_simplex_domain()
+
+    def ufl_strip_data(self):
+        return type(self).__init__(self._ufl_mesh,
+                                   self._topological_dimension,
+                                   self._ufl_id)
 
     def __repr__(self):
         tdim = self.topological_dimension()
@@ -211,6 +226,10 @@ class TensorProductMesh(AbstractDomain):
 
     def is_piecewise_linear_simplex_domain(self):
         return False  # TODO: Any cases this is True
+
+    def ufl_strip_data(self):
+        return type(self).__init__((mesh.ufl_strip_data() for mesh in self._ufl_meshes),
+                                   self._ufl_id)
 
     def __repr__(self):
         r = "TensorProductMesh(%s, %s)" % (repr(self._ufl_meshes), repr(self._ufl_id))

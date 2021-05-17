@@ -81,24 +81,16 @@ class Coefficient(FormArgument):
         "Return tuple of domains related to this terminal object."
         return self._ufl_function_space.ufl_domains()
 
+    def ufl_strip_data(self):
+        return type(self).__init__(self._ufl_function_space.ufl_strip_data(),
+                                   self._count)
+
+
     def _ufl_signature_data_(self, renumbering):
         "Signature data for form arguments depend on the global numbering of the form arguments and domains."
         count = renumbering[self]
         fsdata = self._ufl_function_space._ufl_signature_data_(renumbering)
         return ("Coefficient", count, fsdata)
-
-    def _ufl_strip_data_(self):
-        # TODO: This has been copied from ufl/algorithms/compute_form_data.py
-        # and I can't refactor cleanly because of the presence of the element
-        # mapping (2016).
-        el = self.ufl_element()
-        # XXX: This is a hack to ensure that if the original
-        # coefficient had a domain, the new one does too.
-        # This should be overhauled with requirement that Expressions
-        # always have a domain.
-        if self.ufl_domain() is not None:
-            el = FunctionSpace(self.ufl_domain(), el)
-        return Coefficient(el)
 
     def __str__(self):
         count = str(self._count)

@@ -104,3 +104,7 @@ class FormArgument(Terminal):
 
     def __init__(self):
         Terminal.__init__(self)
+
+    def ufl_strip_data(self):
+        """TODO"""
+        raise NotImplementedError
