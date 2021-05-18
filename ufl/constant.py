@@ -9,18 +9,18 @@ which are constant with respect to a domain."""
 # SPDX-License-Identifier:    LGPL-3.0-or-later
 
 from ufl.core.ufl_type import ufl_type
-from ufl.core.terminal import Terminal
+from ufl.core.terminal import FormArgument
 from ufl.domain import as_domain
 from ufl.utils.counted import counted_init
 
 
 @ufl_type()
-class Constant(Terminal):
+class Constant(FormArgument):
     _ufl_noslots_ = True
     _globalcount = 0
 
     def __init__(self, domain, shape=(), count=None):
-        Terminal.__init__(self)
+        FormArgument.__init__(self)
         counted_init(self, count=count, countedclass=Constant)
 
         self._ufl_domain = as_domain(domain)
@@ -33,6 +33,10 @@ class Constant(Terminal):
 
     def count(self):
         return self._count
+
+    def ufl_strip_data(self):
+        return Constant(self._ufl_domain.ufl_strip_data(), self._ufl_shape,
+                        self._count)
 
     @property
     def ufl_shape(self):

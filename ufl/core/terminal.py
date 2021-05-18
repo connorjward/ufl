@@ -105,3 +105,9 @@ class FormArgument(Terminal):
     def __init__(self):
         Terminal.__init__(self)
 
+    def ufl_strip_data(self):
+        """Return a copy of the form argument with all non-UFL information
+        removed. This is useful for removing references to large data structures
+        so that the object is cachable."""
+        raise NotImplementedError("ufl_strip_data should be implemented by the subclass")
+

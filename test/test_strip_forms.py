@@ -37,7 +37,8 @@ def test_strip_form_arguments():
     v = TestFunction(V) 
     u = TrialFunction(V)
     f = Coefficient(V)
-    form = f * inner(grad(v), grad(u)) * dx
+    k = Constant(V)
+    form = k * f * inner(grad(v), grad(u)) * dx
 
     stripped_form, mapping = strip_form_arguments(form)
 
@@ -46,6 +47,10 @@ def test_strip_form_arguments():
     # assert stripped_form == form
 
     # Verify the contents of the mapping
+    for old_const, new_const in zip(form.constants(), stripped_form.constants()):
+        assert not hasattr(new_const.ufl_domain(), "data")
+        assert mapping[new_const] is old_const
+
     for old_arg, new_arg in zip(form.arguments(), stripped_form.arguments()):
         assert not hasattr(new_arg.ufl_function_space(), "data")
         assert not hasattr(new_arg.ufl_function_space().ufl_domain(), "data")
@@ -63,9 +68,10 @@ def test_strip_form_arguments():
     # assert reattached_form == form
 
     # Check that the arguments have been replaced correctly
+    for old_const, new_const in zip(form.constants(), reattached_form.constants()):
+        assert old_const is new_const
     for old_arg, new_arg in zip(form.arguments(), reattached_form.arguments()):
         assert old_arg is new_arg
-
     for old_coeff, new_coeff in zip(form.coefficients(), reattached_form.coefficients()):
         assert old_coeff is new_coeff
 
