@@ -28,7 +28,7 @@ class AbstractFunctionSpace(object):
         raise NotImplementedError("Missing implementation of IFunctionSpace.ufl_sub_spaces in %s." % self.__class__.__name__)
 
     def ufl_strip_data(self):
-        """TODO"""
+        "Return a copy of the function space composed of only pure UFL objects."
         raise NotImplementedError("Missing implementation of IFunctionSpace.ufl_strip_data in %s." % self.__class__.__name__)
 
 

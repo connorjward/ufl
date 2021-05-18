@@ -54,7 +54,7 @@ class AbstractDomain(object):
         return self._topological_dimension
 
     def ufl_strip_data(self):
-        """TODO."""
+        """Return a copy of the domain composed only of pure UFL objects."""
         raise NotImplementedError
 
 
