@@ -15,7 +15,7 @@ algorithms."""
 import inspect
 
 from ufl.algorithms.map_integrands import map_integrands
-from ufl.classes import Coefficient, Variable, all_ufl_classes
+from ufl.classes import FormArgument, Variable, all_ufl_classes
 from ufl.log import error
 
 
@@ -225,6 +225,7 @@ class FormArgumentStripper(ReuseTransformer):
         if isinstance(o, FormArgument):
             new_o = o.ufl_strip_data()
             self.arg_map[new_o] = o
+            return new_o
         return o
 
 

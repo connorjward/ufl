@@ -109,9 +109,7 @@ class Mesh(AbstractDomain):
         return self._ufl_coordinate_element.cell()
 
     def ufl_strip_data(self):
-        return type(self).__init__(self._ufl_coordinate_element,
-                                   self._ufl_id,
-                                   self._ufl_cargo)
+        return Mesh(self._ufl_coordinate_element, self._ufl_id, self._ufl_cargo)
 
     def is_piecewise_linear_simplex_domain(self):
         return (self._ufl_coordinate_element.degree() == 1) and self.ufl_cell().is_simplex()
@@ -165,9 +163,7 @@ class MeshView(AbstractDomain):
         return self._ufl_mesh.is_piecewise_linear_simplex_domain()
 
     def ufl_strip_data(self):
-        return type(self).__init__(self._ufl_mesh,
-                                   self._topological_dimension,
-                                   self._ufl_id)
+        return MeshView(self._ufl_mesh, self._topological_dimension, self._ufl_id)
 
     def __repr__(self):
         tdim = self.topological_dimension()
@@ -228,8 +224,8 @@ class TensorProductMesh(AbstractDomain):
         return False  # TODO: Any cases this is True
 
     def ufl_strip_data(self):
-        return type(self).__init__((mesh.ufl_strip_data() for mesh in self._ufl_meshes),
-                                   self._ufl_id)
+        meshes = (mesh.ufl_strip_data() for mesh in self._ufl_meshes)
+        return TensorProductMesh(meshes, self._ufl_id)
 
     def __repr__(self):
         r = "TensorProductMesh(%s, %s)" % (repr(self._ufl_meshes), repr(self._ufl_id))

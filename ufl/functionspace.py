@@ -73,7 +73,7 @@ class FunctionSpace(AbstractFunctionSpace):
             return (domain,)
 
     def ufl_strip_data(self):
-        return type(self)(self._ufl_domain.ufl_strip_data(), self._ufl_element)
+        return FunctionSpace(self._ufl_domain.ufl_strip_data(), self._ufl_element)
 
     def _ufl_hash_data_(self):
         domain = self.ufl_domain()
@@ -116,7 +116,8 @@ class TensorProductFunctionSpace(AbstractFunctionSpace):
         return self._ufl_function_spaces
 
     def ufl_strip_data(self):
-        return type(self)(fs.ufl_strip_data() for fs in self._ufl_function_spaces)
+        return TensorProductFunctionSpace(fs.ufl_strip_data() 
+                                          for fs in self._ufl_function_spaces)
 
     def _ufl_hash_data_(self):
         return ("TensorProductFunctionSpace",) + tuple(V._ufl_hash_data_() for V in self.ufl_sub_spaces())
@@ -146,7 +147,8 @@ class MixedFunctionSpace(AbstractFunctionSpace):
         return self._ufl_function_spaces
 
     def ufl_strip_data(self):
-        return type(self)(fs.ufl_strip_data() for fs in self._ufl_function_spaces)
+        return MixedFunctionSpace(fs.ufl_strip_data()
+                                  for fs in self._ufl_function_spaces)
 
     def ufl_sub_space(self, i):
         "Return i-th ufl sub space."

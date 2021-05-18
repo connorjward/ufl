@@ -82,9 +82,7 @@ class Coefficient(FormArgument):
         return self._ufl_function_space.ufl_domains()
 
     def ufl_strip_data(self):
-        return type(self).__init__(self._ufl_function_space.ufl_strip_data(),
-                                   self._count)
-
+        return Coefficient(self._ufl_function_space.ufl_strip_data(), self._count)
 
     def _ufl_signature_data_(self, renumbering):
         "Signature data for form arguments depend on the global numbering of the form arguments and domains."
