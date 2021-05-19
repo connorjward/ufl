@@ -92,6 +92,9 @@ class Integral(object):
         "Return the domain data of this integral."
         return self._subdomain_data
 
+    def ufl_strip_data(self):
+        return self.reconstruct(domain=self._domain.ufl_strip_data())
+
     def __neg__(self):
         return self.reconstruct(-self._integrand)
 

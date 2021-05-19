@@ -15,7 +15,7 @@ algorithms."""
 import inspect
 
 from ufl.algorithms.map_integrands import map_integrands
-from ufl.classes import FormArgument, Variable, all_ufl_classes
+from ufl.classes import FormArgument, Integral, Terminal, Variable, all_ufl_classes
 from ufl.log import error
 
 
@@ -216,31 +216,27 @@ class VariableStripper(ReuseTransformer):
         return self.visit(o.ufl_operands[0])
 
 
-class FormArgumentStripper(ReuseTransformer):
+class FormArgumentStripper(CopyTransformer):
     def __init__(self):
-        ReuseTransformer.__init__(self)
+        CopyTransformer.__init__(self)
         self.arg_map = {}
 
     def terminal(self, o):
-        if isinstance(o, FormArgument):
-            new_o = o.ufl_strip_data()
-            self.arg_map[new_o] = o
-            return new_o
-        return o
+        new_o = o.ufl_strip_data()
+        self.arg_map[new_o] = o
+        return new_o
 
 
-class FormArgumentReplacer(ReuseTransformer):
+class FormArgumentReplacer(CopyTransformer):
     def __init__(self, arg_map):
-        ReuseTransformer.__init__(self)
+        CopyTransformer.__init__(self)
         self.arg_map = arg_map
 
     def terminal(self, o):
-        if isinstance(o, FormArgument):
-            try:
-                return self.arg_map[o]
-            except KeyError:
-                raise ValueError(f"FormArgument {o} is not present in the mapping")
-        return o
+        try:
+            return self.arg_map[o]
+        except KeyError:
+            raise ValueError(f"FormArgument {o} is not present in the mapping")
 
 
 def apply_transformer(e, transformer, integral_type=None):

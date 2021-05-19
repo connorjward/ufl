@@ -32,7 +32,8 @@ def map_integrands(function, form, only_integral_type=None):
     elif isinstance(form, Integral):
         itg = form
         if (only_integral_type is None) or (itg.integral_type() in only_integral_type):
-            return itg.reconstruct(function(itg.integrand()))
+            integrand = function(itg.integrand())
+            return itg.reconstruct(integrand, domain=integrand.ufl_domain())
         else:
             return itg
     elif isinstance(form, Expr):
