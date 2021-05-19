@@ -34,7 +34,16 @@ class AugmentedCoefficient(Coefficient):
         self.data = data
 
 
-def _make_form(mesh_data, fs_data, coeff_data):
+def test_strip_form_arguments_strips_data_refs():
+    mesh_data = object()
+    fs_data = object()
+    coeff_data = object()
+
+    # Sanity check
+    assert sys.getrefcount(mesh_data) == MIN_REF_COUNT
+    assert sys.getrefcount(fs_data) == MIN_REF_COUNT
+    assert sys.getrefcount(coeff_data) == MIN_REF_COUNT
+
     cell = triangle
     domain = AugmentedMesh(cell, data=mesh_data)
     element = FiniteElement("Lagrange", cell, 1)
@@ -45,24 +54,16 @@ def _make_form(mesh_data, fs_data, coeff_data):
     f = AugmentedCoefficient(V, data=coeff_data)
     k = Constant(V)
 
-    return k*f*inner(grad(v), grad(u))*dx
-
-
-def test_strip_form_arguments_strips_data_refs():
-    mesh_data = object()
-    fs_data = object()
-    coeff_data = object()
-
-    assert sys.getrefcount(mesh_data) == MIN_REF_COUNT
-    assert sys.getrefcount(fs_data) == MIN_REF_COUNT
-    assert sys.getrefcount(coeff_data) == MIN_REF_COUNT
-
-    form = _make_form(mesh_data, fs_data, coeff_data)
-    stripped_form, mapping = strip_form_arguments(form)
+    form = k*f*inner(grad(v), grad(u))*dx
+    
+    # Remove extraneous references
+    del cell, domain, element, V, v, u, f, k
 
     assert sys.getrefcount(mesh_data) == MIN_REF_COUNT + 1
     assert sys.getrefcount(fs_data) == MIN_REF_COUNT + 1
     assert sys.getrefcount(coeff_data) == MIN_REF_COUNT + 1
+
+    stripped_form, mapping = strip_form_arguments(form)
 
     del form, mapping
     gc.collect()  # This is needed to update the refcounts
@@ -73,7 +74,21 @@ def test_strip_form_arguments_strips_data_refs():
 
 
 def test_strip_form_arguments_does_not_change_form():
-    form = _make_form(None, None, None)
+    mesh_data = object()
+    fs_data = object()
+    coeff_data = object()
+
+    cell = triangle
+    domain = AugmentedMesh(cell, data=mesh_data)
+    element = FiniteElement("Lagrange", cell, 1)
+    V = AugmentedFunctionSpace(domain, element, data=fs_data)
+
+    v = TestFunction(V) 
+    u = TrialFunction(V)
+    f = AugmentedCoefficient(V, data=coeff_data)
+    k = Constant(V)
+
+    form = k*f*inner(grad(v), grad(u))*dx
     stripped_form, mapping = strip_form_arguments(form)
 
     assert stripped_form.signature() == form.signature()
