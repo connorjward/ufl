@@ -34,15 +34,23 @@ class AugmentedCoefficient(Coefficient):
         self.data = data
 
 
+class AugmentedConstant(Constant):
+    def __init__(self, *args, data):
+        super().__init__(*args)
+        self.data = data
+
+
 def test_strip_form_arguments_strips_data_refs():
     mesh_data = object()
     fs_data = object()
     coeff_data = object()
+    const_data = object()
 
     # Sanity check
     assert sys.getrefcount(mesh_data) == MIN_REF_COUNT
     assert sys.getrefcount(fs_data) == MIN_REF_COUNT
     assert sys.getrefcount(coeff_data) == MIN_REF_COUNT
+    assert sys.getrefcount(const_data) == MIN_REF_COUNT
 
     cell = triangle
     domain = AugmentedMesh(cell, data=mesh_data)
@@ -52,7 +60,7 @@ def test_strip_form_arguments_strips_data_refs():
     v = TestFunction(V) 
     u = TrialFunction(V)
     f = AugmentedCoefficient(V, data=coeff_data)
-    k = Constant(V)
+    k = AugmentedConstant(V, data=const_data)
 
     form = k*f*inner(grad(v), grad(u))*dx
     
@@ -62,6 +70,7 @@ def test_strip_form_arguments_strips_data_refs():
     assert sys.getrefcount(mesh_data) == MIN_REF_COUNT + 1
     assert sys.getrefcount(fs_data) == MIN_REF_COUNT + 1
     assert sys.getrefcount(coeff_data) == MIN_REF_COUNT + 1
+    assert sys.getrefcount(const_data) == MIN_REF_COUNT + 1
 
     stripped_form, mapping = strip_form_arguments(form)
 
@@ -71,12 +80,14 @@ def test_strip_form_arguments_strips_data_refs():
     assert sys.getrefcount(mesh_data) == MIN_REF_COUNT
     assert sys.getrefcount(fs_data) == MIN_REF_COUNT
     assert sys.getrefcount(coeff_data) == MIN_REF_COUNT
+    assert sys.getrefcount(const_data) == MIN_REF_COUNT
 
 
 def test_strip_form_arguments_does_not_change_form():
     mesh_data = object()
     fs_data = object()
     coeff_data = object()
+    const_data = object()
 
     cell = triangle
     domain = AugmentedMesh(cell, data=mesh_data)
@@ -86,7 +97,7 @@ def test_strip_form_arguments_does_not_change_form():
     v = TestFunction(V) 
     u = TrialFunction(V)
     f = AugmentedCoefficient(V, data=coeff_data)
-    k = Constant(V)
+    k = AugmentedConstant(V, data=const_data)
 
     form = k*f*inner(grad(v), grad(u))*dx
     stripped_form, mapping = strip_form_arguments(form)
