@@ -141,7 +141,6 @@ class MeshView(AbstractDomain):
     """Symbolic representation of a mesh."""
 
     def __init__(self, mesh, topological_dimension, ufl_id=None):
-        # TODO: topological_dimension is not actually used. Is this a bug?
         self._ufl_id = self._init_ufl_id(ufl_id)
 
         # Store mesh
