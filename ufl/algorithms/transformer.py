@@ -15,7 +15,7 @@ algorithms."""
 import inspect
 
 from ufl.algorithms.map_integrands import map_integrands
-from ufl.classes import FormArgument, Integral, Terminal, Variable, all_ufl_classes
+from ufl.classes import Variable, all_ufl_classes
 from ufl.log import error
 
 
